@@ -1,4 +1,3 @@
-
 from sqlalchemy import (
     Column, ForeignKey, Integer, String,
     Text, TIMESTAMP, DECIMAL, UniqueConstraint,
@@ -150,16 +149,3 @@ class Wishlist(Base):
 
     rent = relationship('Rent', back_populates='wishlist')
     user = relationship('User', back_populates='wishlist')
-
-
-
-
-
-
-
-
-
-
-
-
-
