@@ -1,4 +1,3 @@
-
 from sqlalchemy import (
     Column, ForeignKey, Integer, String,
     Text, TIMESTAMP,
@@ -55,7 +54,7 @@ class District(Base):
     region_id = Column(Integer, ForeignKey('region.id'))
 
     region = relationship('Region', back_populates='district')
-
+    user = relationship("User",back_populates='district')
 
 class Jins(Base):
     __tablename__ = 'jins'
@@ -82,14 +81,14 @@ class User(Base):
     image = Column(String)
     invisible = Column(Boolean, default=False)
     district_id = Column(Integer, ForeignKey("district.id"))
-    register_at = Column(TIMESTAMP, default=datetime.datetime.now(datetime.UTC))
+    register_at = Column(TIMESTAMP, default=datetime.datetime.utcnow)
 
     university = relationship('University', back_populates='user')
     faculty = relationship('Faculty', back_populates='user')
     district = relationship('District', back_populates='user')
     wishlist = relationship('Wishlist', back_populates='user')
-    like = relationship('Like', back_populates='user')
     jins = relationship('Jins', back_populates='user')
+    rate = relationship('Rate',back_populates='user')
 
 
 class Renter(Base):
@@ -101,9 +100,9 @@ class Renter(Base):
     phone = Column(String, unique=True)
     password = Column(String)
     image = Column(String)
-    register_at = Column(TIMESTAMP, default=datetime.datetime.now(datetime.UTC))
+    register_at = Column(TIMESTAMP, default=datetime.datetime.utcnow)
 
-    rent = relationship('Renter', back_populates='renter')
+    rent = relationship('Rent', back_populates='renter')
 
 
 class Category(Base):
@@ -126,6 +125,7 @@ class Rent(Base):
     student_jins_id = Column(Integer, ForeignKey('jins.id'))
     student_count = Column(Integer)
     renter_id = Column(Integer, ForeignKey('renter.id'))
+    category_id = Column(Integer,ForeignKey('category.id'))
     location = Column(String)
     longitude = Column(Float)
     latitude = Column(Float)
@@ -137,11 +137,11 @@ class Rent(Base):
     furniture = Column(Boolean)
     other_convenience = Column(Text)
 
-    like = relationship("Like", back_populates='rent')
     wishlist = relationship("Wishlist", back_populates='rent')
     category = relationship("Category", back_populates='rent')
     jins = relationship('Jins', back_populates='rent')
-
+    renter = relationship("Renter",back_populates='rent')
+    rate = relationship('Rate',back_populates='rent')
 
 class Rate(Base):
     __tablename__ = 'rate'
@@ -151,8 +151,8 @@ class Rate(Base):
     rent_id = Column(Integer, ForeignKey('rent.id'))
     rate = Column(Integer)
 
-    rent = relationship('Rent', back_populates='like')
-    user = relationship('User', back_populates='like')
+    rent = relationship('Rent', back_populates='rate')
+    user = relationship('User', back_populates='rate')
 
 
 class Wishlist(Base):
