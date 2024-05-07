@@ -1,8 +1,10 @@
 from fastapi import FastAPI
+from mobile.mobile import mobile_router
 
 from auth.auth import auth_router
 
 app = FastAPI()
+app.include_router(mobile_router)
 
 
 @app.get("/")

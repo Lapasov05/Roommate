@@ -41,7 +41,8 @@ class Region(Base):
     __tablename__ = 'region'
     metadata = metadata
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name_uz = Column(String)
+    name_ru = Column(String)
 
     district = relationship('District', back_populates='region')
 
@@ -56,11 +57,13 @@ class District(Base):
     region = relationship('Region', back_populates='district')
     user = relationship("User",back_populates='district')
 
+
 class Jins(Base):
     __tablename__ = 'jins'
     metadata = metadata
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name_uz = Column(String)
+    name_ru = Column(String)
 
     user = relationship('User', back_populates='jins')
     rent = relationship('Rent', back_populates='jins')
@@ -87,8 +90,8 @@ class User(Base):
     faculty = relationship('Faculty', back_populates='user')
     district = relationship('District', back_populates='user')
     wishlist = relationship('Wishlist', back_populates='user')
+    rate = relationship('Rate', back_populates='user')
     jins = relationship('Jins', back_populates='user')
-    rate = relationship('Rate',back_populates='user')
 
 
 class Renter(Base):
@@ -120,12 +123,13 @@ class Rent(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     description = Column(Text)
+    category_id = Column(Integer, ForeignKey('category.id'))
+    contract = Column(Boolean)
     room_count = Column(Integer)
     total_price = Column(Float)
     student_jins_id = Column(Integer, ForeignKey('jins.id'))
     student_count = Column(Integer)
     renter_id = Column(Integer, ForeignKey('renter.id'))
-    category_id = Column(Integer,ForeignKey('category.id'))
     location = Column(String)
     longitude = Column(Float)
     latitude = Column(Float)
@@ -142,6 +146,7 @@ class Rent(Base):
     jins = relationship('Jins', back_populates='rent')
     renter = relationship("Renter",back_populates='rent')
     rate = relationship('Rate',back_populates='rent')
+
 
 class Rate(Base):
     __tablename__ = 'rate'
