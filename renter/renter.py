@@ -2,11 +2,11 @@ from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import List
 from auth.utils import verify_token
 from database import get_async_session
 from models.models import Rent, Renter
-from renter.scheme import Rent_scheme
+from renter.scheme import Rent_scheme, My_rent_scheme
 
 renter_router = APIRouter()
 
@@ -27,7 +27,7 @@ async def add_rent(model: Rent_scheme,
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@renter_router.get('/get_rents')
+@renter_router.get('/get_rents',response_model=List[My_rent_scheme])
 async def get_rents(token: dict = Depends(verify_token),
                     session: AsyncSession = Depends(get_async_session)):
     try:
@@ -47,13 +47,15 @@ async def get_rents(token: dict = Depends(verify_token),
             }
             for item in result:
                 list_rents.append({
-                    'name': item.id,
+                    'id':item.id,
+                    'name': item.name,
                     'description': item.description,
                     'room_count': item.room_count,
                     'total_price': item.total_price,
                     'student_jins_id': item.student_jins_id,
                     'renter_id': renter_dict,
                     'student_count': item.student_count,
+                    'contract':item.contract,
                     'category_id': item.category_id,
                     'location': item.location,
                     'longitude': item.longitude,
@@ -74,3 +76,5 @@ async def get_rents(token: dict = Depends(verify_token),
 
     except Exception as e:
         return HTTPException(status_code=400, detail=f"{e}")
+
+
