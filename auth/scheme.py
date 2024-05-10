@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -6,21 +7,27 @@ from pydantic import BaseModel
 class User_Phone(BaseModel):
     phone: str
 
-# class UserData(BaseModel):
-#     firstname: str
-#     lastname: str
-#     phone:str
-#     jins_id: int
-#     password1:str
-#     password2:str
-#     invisible: bool
+class UserData_info(BaseModel):
+    firstname: str
+    lastname: str
+    phone:str
+    university_id:Optional[int]
+    faculty_id:Optional[int]
+    grade:Optional[int]
+    district_id:Optional[int]
+
+
+
+class RenterData_info(BaseModel):
+    firstname: str
+    lastname: str
+    phone:str
 
 
 class RenterData(BaseModel):
     firstname: str
     lastname: str
     phone:str
-    birth_date: date
     password1:str
     password2:str
     invisible: bool
