@@ -10,9 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
 from database import get_async_session
-from .scheme import User_Phone, UserLogin, UserData_2, University_list, faculty_list, district_list, region_list
+from .scheme import User_Phone, UserLogin, UserData_2, University_list, faculty_list, district_list, region_list, \
+    UserData_info, RenterData, RenterData_info
 from models.models import User, Renter, University, Faculty, District, Region
-from .utils import generate_token, verify_token
+from .utils import generate_token, verify_token, generate_token_renter
 
 auth_router = APIRouter()
 
@@ -21,7 +22,7 @@ pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 user_data = {}  # Initialize user_data dictionary
 
 
-@auth_router.post('/phone_number')
+@auth_router.post('/phone_number/')
 async def phone_number(user_phone: User_Phone, session: AsyncSession = Depends(get_async_session)):
     try:
         query_phone = select(User).where(User.phone == user_phone.phone)
@@ -40,7 +41,58 @@ async def phone_number(user_phone: User_Phone, session: AsyncSession = Depends(g
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.post('/phone_number/sms')
+@auth_router.put('/student/reset-password/')
+async def reset_password(phone: str,
+                         password_1: str,
+                         password_2: str,
+                         session: AsyncSession = Depends(get_async_session)):
+    try:
+        if password_1 == password_2:
+            query = select(User).where(User.phone == phone)
+            res = await session.execute(query)
+            result = res.scalars().one_or_none()
+            if result:
+                hash_password = pwd_context.hash(password_2)
+                query_update = update(User).where(User.phone == phone).values(password=hash_password)
+                await session.execute(query_update)
+                await session.commit()
+                return HTTPException(status_code=200,detail="Password updated")
+            else:
+                raise HTTPException(status_code=400, detail="User does not exist")
+        else:
+            raise HTTPException(status_code=400, detail="Passwords do not match")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
+
+
+@auth_router.put('/renter/reset-password/')
+async def reset_password(phone: str,
+                         password_1: str,
+                         password_2: str,
+                         session: AsyncSession = Depends(get_async_session)):
+    try:
+        if password_1 == password_2:
+            query = select(Renter).where(Renter.phone == phone)
+            res = await session.execute(query)
+            result = res.scalars().one_or_none()
+            if result:
+                hash_password = pwd_context.hash(password_2)
+                query_update = update(Renter).where(Renter.phone == phone).values(password=hash_password)
+                await session.execute(query_update)
+                await session.commit()
+                return HTTPException(status_code=200,detail="Password updated")
+            else:
+                raise HTTPException(status_code=400, detail="User does not exist")
+        else:
+            raise HTTPException(status_code=400, detail="Passwords do not match")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@auth_router.post('/phone_number/sms/')
 async def get_sms(message: int):
     if message == 1234:
         return HTTPException(status_code=200, detail="Correct code!")
@@ -48,7 +100,7 @@ async def get_sms(message: int):
         return HTTPException(status_code=400, detail="Wrong code!")
 
 
-@auth_router.post('/register/student/step_1')
+@auth_router.post('/student/register/step_1/')
 async def register_user(image: UploadFile,
                         firstname: str,
                         lastname: str,
@@ -82,7 +134,7 @@ async def register_user(image: UploadFile,
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.put('/set-profile')
+@auth_router.put('/student/set-profile/')
 async def set_profile(model: UserData_2,
                       token: dict = Depends(verify_token),
                       session: AsyncSession = Depends(get_async_session)
@@ -90,17 +142,17 @@ async def set_profile(model: UserData_2,
     try:
         if token is not None:
             user_id = token.get('user_id')
-            query = update(User).where(User.id==user_id).values(**dict(model))
+            query = update(User).where(User.id == user_id).values(**dict(model))
             await session.execute(query)
             await session.commit()
-            return HTTPException(status_code=200,detail="Updated")
+            return HTTPException(status_code=200, detail="Updated")
         else:
             return HTTPException(status_code=400, detail="Invalid token")
     except Exception as e:
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@auth_router.post('/register/renter')
+@auth_router.post('/renter/register/')
 async def register_user_student(image: UploadFile,
                                 first_name: str,
                                 last_name: str,
@@ -132,7 +184,7 @@ async def register_user_student(image: UploadFile,
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@auth_router.post('/login/Student')
+@auth_router.post('/student/login/')
 async def login(user: UserLogin, session: AsyncSession = Depends(get_async_session)):
     try:
         query_user = select(User).where(User.phone == user.phone)
@@ -149,13 +201,11 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
             return HTTPException(status_code=401, detail="Login Failed")
     except NoResultFound:
         return HTTPException(status_code=401, detail="User or Renter not found")
-    except MultipleResultsFound:
-        return HTTPException(status_code=500, detail="Multiple users or renters found")
     except Exception as e:
         return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
-@auth_router.post('/login/Renter')
+@auth_router.post('/renter/login/')
 async def login(user: UserLogin, session: AsyncSession = Depends(get_async_session)):
     try:
         query_renter = select(Renter).where(Renter.phone == user.phone)
@@ -165,7 +215,7 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
         renter_result = res_renter.scalar_one_or_none()
 
         if renter_result and pwd_context.verify(user.password, renter_result.password):
-            token = generate_token(renter_result.id)
+            token = generate_token_renter(renter_result.id)
             print('Renter')
             return {"status_code": 200, "detail": token}
         else:
@@ -224,3 +274,30 @@ async def get_ditrict(region_id: int,
         return result
     except Exception as e:
         return HTTPException(status_code=500, detail=f"{e}")
+
+
+@auth_router.get("/student/user_info",response_model=UserData_info)
+async def get_user_info(token:dict=Depends(verify_token),
+                        session:AsyncSession=Depends(get_async_session)):
+    try:
+        user_id = token.get('user_id')
+        query = select(User).where(User.id==user_id)
+        res = await session.execute(query)
+        result = res.scalar()
+        return result
+    except Exception as e:
+        return HTTPException(status_code=400,detail=f"{e}")
+
+
+
+@auth_router.get("/renter/user_info",response_model=RenterData_info)
+async def get_user_info(token:dict=Depends(verify_token),
+                        session:AsyncSession=Depends(get_async_session)):
+    try:
+        user_id = token.get('renter_id')
+        query = select(Renter).where(Renter.id==user_id)
+        res = await session.execute(query)
+        result = res.scalar()
+        return result
+    except Exception as e:
+        return HTTPException(status_code=400,detail=f"{e}")

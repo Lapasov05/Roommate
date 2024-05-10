@@ -35,6 +35,29 @@ def generate_token(user_id: int):
     }
 
 
+def generate_token_renter(renter_id: int):
+    jti_access = str(secrets.token_urlsafe(32))
+    jti_refresh = str(secrets.token_urlsafe(32))
+    data_access_token = {
+        'token_type': 'access',
+        'renter_id': renter_id,
+        'jti':jti_access
+    }
+    data_refresh_token = {
+        'token_type':'refresh',
+        'renter_id':renter_id,
+        'jti':jti_refresh
+    }
+    access_token =jwt.encode(data_access_token,secret_key,algorithm)
+    refresh_token =jwt.encode(data_refresh_token,secret_key,algorithm)
+
+    return {
+    'access_token':access_token,
+
+     'refresh_token':refresh_token
+    }
+
+
 
 def verify_token(credentials:HTTPAuthorizationCredentials = Depends(security)):
     try:
