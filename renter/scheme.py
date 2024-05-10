@@ -12,6 +12,7 @@ class Rent_scheme(BaseModel):
     student_count:int
     category_id:int
     location:str
+    contract:bool
     longitude:float
     latitude:float
     wifi:bool
@@ -25,6 +26,7 @@ class Rent_scheme(BaseModel):
 
 
 class My_rent_scheme(BaseModel):
+    id:int
     name:str
     description:str
     room_count:int
@@ -32,6 +34,7 @@ class My_rent_scheme(BaseModel):
     student_jins_id:int
     renter_id:RenterData_info
     student_count:int
+    contract:bool
     category_id:int
     location:str
     longitude:float

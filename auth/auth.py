@@ -301,3 +301,4 @@ async def get_user_info(token:dict=Depends(verify_token),
         return result
     except Exception as e:
         return HTTPException(status_code=400,detail=f"{e}")
+
