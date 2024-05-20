@@ -2,6 +2,8 @@ from typing import Union
 
 from pydantic import BaseModel, Field
 
+from auth.scheme import UserData_info
+
 
 class CategoryScheme(BaseModel):
     id: int
@@ -61,6 +63,27 @@ class FilterScheme(BaseModel):
     rate: Union[int, None]
     range: Union[int, None]
 
+
+class ReviewPostScheme(BaseModel):
+    rent_id: int
+    rate: int = Field(gte=0, lte=5)
+    comment: Union[str, None]
+
+
+class UserInfo(BaseModel):
+    id: int
+    firstname: Union[str, None]
+    lastname: Union[str, None]
+    phone: Union[str, None]
+    image: Union[str, None]
+
+
+class RateGetScheme(BaseModel):
+    id: int
+    rate: int
+    rent_id: int
+    comment: str
+    user: UserInfo
 
 
 

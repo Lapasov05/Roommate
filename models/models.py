@@ -140,12 +140,14 @@ class Rent(Base):
     refrigerator = Column(Boolean)
     furniture = Column(Boolean)
     other_convenience = Column(Text)
+    created_at = Column(TIMESTAMP, default=datetime.datetime.utcnow())
 
     wishlist = relationship("Wishlist", back_populates='rent')
     category = relationship("Category", back_populates='rent')
     jins = relationship('Jins', back_populates='rent')
     renter = relationship("Renter",back_populates='rent')
     rate = relationship('Rate',back_populates='rent')
+    image = relationship('Image', back_populates='rent')
 
 
 class Rate(Base):
@@ -155,6 +157,7 @@ class Rate(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     rent_id = Column(Integer, ForeignKey('rent.id'))
     rate = Column(Integer)
+    comment = Column(String)
 
     rent = relationship('Rent', back_populates='rate')
     user = relationship('User', back_populates='rate')
@@ -169,3 +172,15 @@ class Wishlist(Base):
 
     rent = relationship('Rent', back_populates='wishlist')
     user = relationship('User', back_populates='wishlist')
+
+
+class Image(Base):
+    __tablename__ = 'image'
+    metadata = metadata
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rent_id = Column(Integer, ForeignKey('rent.id'))
+    url = Column(String)
+    hashcode = Column(String, unique=True)
+
+    rent = relationship('Rent', back_populates='image')
+
