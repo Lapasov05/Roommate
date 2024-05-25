@@ -2,6 +2,7 @@ import datetime
 import secrets
 from typing import List
 
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
@@ -74,6 +75,9 @@ async def add_image_rent(
         session: AsyncSession = Depends(get_async_session)
 ):
     url = f'images/{image.filename}'
+    async with aiofiles.open(url, 'wb') as zipf:
+        content = await image.read()
+        await zipf.write(content)
     hashcode = secrets.token_hex(32)
     data = insert(Image).values(url=url, hashcode=hashcode, rent_id=rent_id)
     await session.execute(data)

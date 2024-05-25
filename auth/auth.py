@@ -224,8 +224,8 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
         return HTTPException(status_code=401, detail="User or Renter not found")
     except MultipleResultsFound:
         return HTTPException(status_code=500, detail="Multiple users or renters found")
-    except Exception as e:
-        return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+    # except Exception as e:
+    #     return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
 @auth_router.get('/get_university/', response_model=List[University_list])
