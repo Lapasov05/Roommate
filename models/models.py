@@ -15,8 +15,10 @@ class University(Base):
     __tablename__ = 'university'
     metadata = metadata
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
-    acronym = Column(String)
+    name_uz = Column(String)
+    name_ru = Column(String)
+    acronym_uz = Column(String)
+    acronym_ru = Column(String)
     longitude = Column(Float)
     latitude = Column(Float)
 
@@ -28,7 +30,8 @@ class Faculty(Base):
     __tablename__ = 'faculty'
     metadata = metadata
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name_uz = Column(String)
+    name_ru = Column(String)
     university_id = Column(Integer, ForeignKey("university.id"))
     longitude = Column(Float)
     latitude = Column(Float)
@@ -51,7 +54,8 @@ class District(Base):
     __tablename__ = 'district'
     metadata = metadata
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name_ru = Column(String)
+    name_uz = Column(String)
     region_id = Column(Integer, ForeignKey('region.id'))
 
     region = relationship('Region', back_populates='district')
@@ -112,7 +116,8 @@ class Category(Base):
     __tablename__ = 'category'
     metadata = metadata
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name_uz = Column(String)
+    name_ru = Column(String)
 
     rent = relationship('Rent', back_populates='category')
 
