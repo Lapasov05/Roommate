@@ -20,14 +20,8 @@ from datetime import datetime, timedelta
 mobile_router = APIRouter()
 
 
-@mobile_router.get('/mobile')
-async def say_hello(
 
-):
-    return "Hello world"
-
-
-@mobile_router.get('/rent', response_model=List[RentGETScheme])
+@mobile_router.get('/student/rent', response_model=List[RentGETScheme])
 async def get_all_rent(
     session: AsyncSession = Depends(get_async_session)
 ):
@@ -38,7 +32,7 @@ async def get_all_rent(
     return rent_data
 
 
-@mobile_router.post('/add-rent')
+@mobile_router.post('/student/add-rent')
 async def add_rent(
         data: RentADDScheme,
         session: AsyncSession = Depends(get_async_session)
@@ -52,7 +46,7 @@ async def add_rent(
     return {'success': True}
 
 
-@mobile_router.get('/home/filters-news')
+@mobile_router.get('/student/home/filters-news')
 async def rent_filter(
         session: AsyncSession = Depends(get_async_session)
 ):
@@ -74,7 +68,7 @@ async def rent_filter(
     return rented_items
 
 
-@mobile_router.post('/add-image-rent')
+@mobile_router.post('/student/add-image-rent')
 async def add_image_rent(
         image: UploadFile,
         rent_id: int,
@@ -91,7 +85,7 @@ async def add_image_rent(
     return {'success': True}
 
 
-@mobile_router.get('/image', response_class=FileResponse)
+@mobile_router.get('/student/image', response_class=FileResponse)
 async def get_image(
         hashcode: str,
         session: AsyncSession = Depends(get_async_session)
@@ -106,7 +100,7 @@ async def get_image(
         raise HTTPException(status_code=400, detail='Image is not available!')
 
 
-@mobile_router.post('/add-review')
+@mobile_router.post('/student/add-review')
 async def add_review(
         review_data: ReviewPostScheme,
         token: dict = Depends(verify_token),
@@ -123,7 +117,7 @@ async def add_review(
         raise HTTPException(status_code=400, detail="Bad request!!!")
 
 
-@mobile_router.get('/get_rents/get-review', response_model=List[RateGetScheme])
+@mobile_router.get('/student/get_rents/get-review', response_model=List[RateGetScheme])
 async def get_rents_review(
         rent_id: int,
         session: AsyncSession = Depends(get_async_session)
