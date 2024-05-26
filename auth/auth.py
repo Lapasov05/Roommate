@@ -78,9 +78,11 @@ async def reset_password(phone: str,
             if result:
                 hash_password = pwd_context.hash(password_2)
                 query_update = update(Renter).where(Renter.phone == phone).values(password=hash_password)
+                token = generate_token_renter(result.id)
                 await session.execute(query_update)
                 await session.commit()
-                return HTTPException(status_code=200, detail="Password updated")
+
+                return token
             else:
                 raise HTTPException(status_code=400, detail="User does not exist")
         else:
@@ -198,8 +200,8 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
             return HTTPException(status_code=401, detail="Login Failed")
     except NoResultFound:
         return HTTPException(status_code=401, detail="User or Renter not found")
-    except Exception as e:
-        return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+    # except Exception as e:
+    #     return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
 @auth_router.post('/renter/login/')
