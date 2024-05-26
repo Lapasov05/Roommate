@@ -20,21 +20,25 @@ from datetime import datetime, timedelta
 mobile_router = APIRouter()
 
 
-
 @mobile_router.get('/student/rent', response_model=List[RentGETScheme])
 async def get_all_rent(
-    session: AsyncSession = Depends(get_async_session)
+        token: dict = Depends(verify_token),
+        session: AsyncSession = Depends(get_async_session)
 ):
-    query = select(Rent).options(selectinload(Rent.jins), selectinload(Rent.category))
-    rent = await session.execute(query)
-    print(rent)
-    rent_data = rent.scalars().all()
-    return rent_data
+    try:
+        query = select(Rent).options(selectinload(Rent.jins), selectinload(Rent.category))
+        rent = await session.execute(query)
+        print(rent)
+        rent_data = rent.scalars().all()
+        return rent_data
+    except Exception as e:
+        return HTTPException(status_code=400, detail=f"{e}")
 
 
 @mobile_router.post('/student/add-rent')
 async def add_rent(
         data: RentADDScheme,
+        token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
     try:
@@ -48,8 +52,10 @@ async def add_rent(
 
 @mobile_router.get('/student/home/filters-news')
 async def rent_filter(
+        token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
+    jins_id = token.get('jins_id')
     # Calculate the date 3 days ago
     three_days_ago = datetime.now() - timedelta(days=3)
 
@@ -59,6 +65,7 @@ async def rent_filter(
         selectinload(Rent.renter)
     ).where(
         Rent.created_at >= three_days_ago
+        , Rent.student_jins_id == jins_id
     )
 
     # Execute the query
@@ -72,6 +79,7 @@ async def rent_filter(
 async def add_image_rent(
         image: UploadFile,
         rent_id: int,
+        token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
     url = f'images/{image.filename}'
@@ -88,10 +96,10 @@ async def add_image_rent(
 @mobile_router.get('/student/image', response_class=FileResponse)
 async def get_image(
         hashcode: str,
+        token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
-
-    data = await session.execute(select(Image).where(Image.hashcode==hashcode))
+    data = await session.execute(select(Image).where(Image.hashcode == hashcode))
     image = data.scalars().first()
     if image:
         some_file_path = f"{image.url}"
@@ -120,11 +128,10 @@ async def add_review(
 @mobile_router.get('/student/get_rents/get-review', response_model=List[RateGetScheme])
 async def get_rents_review(
         rent_id: int,
+        token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
-    query = select(Rate).options(selectinload(Rate.user)).where(Rate.rent_id==rent_id)
+    query = select(Rate).options(selectinload(Rate.user)).where(Rate.rent_id == rent_id)
     data = await session.execute(query)
     rate_data = data.scalars().all()
     return rate_data
-
-

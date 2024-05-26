@@ -12,17 +12,19 @@ algorithm = 'HS256'
 security = HTTPBearer()
 
 
-def generate_token(user_id: int):
+def generate_token(user_id: int,jins_id:int):
     jti_access = str(secrets.token_urlsafe(32))
     jti_refresh = str(secrets.token_urlsafe(32))
     data_access_token = {
         'token_type': 'access',
         'user_id': user_id,
+        'jins_id':jins_id,
         'jti':jti_access
     }
     data_refresh_token = {
         'token_type':'refresh',
         'user_id':user_id,
+        'jins_id':jins_id,
         'jti':jti_refresh
     }
     access_token =jwt.encode(data_access_token,secret_key,algorithm)

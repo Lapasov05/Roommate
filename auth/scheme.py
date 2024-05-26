@@ -67,3 +67,8 @@ class district_list(BaseModel):
     id: int
     name: str
     region_id:int
+
+class change_password(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str

@@ -8,6 +8,8 @@ from auth.scheme import UserData_info
 class CategoryScheme(BaseModel):
     id: int
     name: str
+    name_uz:str
+    name_ru:str
 
 
 class JinsScheme(BaseModel):
@@ -15,7 +17,8 @@ class JinsScheme(BaseModel):
     name: str
 
 
-class RentGETScheme(BaseModel):
+
+class   RentGETScheme(BaseModel):
     id: int
     name: str
     description: str
