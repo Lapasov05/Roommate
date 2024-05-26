@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
-
+from typing import Union
 from auth.scheme import RenterData_info
 
 
@@ -67,3 +67,20 @@ class My_rent_scheme(BaseModel):
     refrigerator:bool
     furniture:bool
     other_convenience:str
+
+
+class UpdateRentScheme(BaseModel):
+    name: Union[str, None] = None
+    description: Union[str, None] = None
+    room_count: Union[int, None] = None
+    broker: Union[bool, None]= None
+    student_count: Union[int, None]= None
+    contract: Union[bool, None]= None
+    wifi: Union[bool, None]= None
+    conditioner: Union[bool, None]= None
+    washing_machine: Union[bool, None]= None
+    TV: Union[bool, None]= None
+    refrigerator: Union[bool, None]= None
+    furniture: Union[bool, None]= None
+    other_convenience: Union[str, None]= None
+

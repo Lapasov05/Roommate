@@ -130,6 +130,7 @@ class Rent(Base):
     description = Column(Text)
     category_id = Column(Integer, ForeignKey('category.id'))
     contract = Column(Boolean)
+    broker = Column(Boolean)
     room_count = Column(Integer)
     total_price = Column(Float)
     student_jins_id = Column(Integer, ForeignKey('jins.id'))
@@ -146,6 +147,7 @@ class Rent(Base):
     furniture = Column(Boolean)
     other_convenience = Column(Text)
     created_at = Column(TIMESTAMP, default=datetime.datetime.utcnow())
+    updated_at = Column(TIMESTAMP)
 
     wishlist = relationship("Wishlist", back_populates='rent')
     category = relationship("Category", back_populates='rent')

@@ -1,6 +1,8 @@
+import datetime
+
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -8,8 +10,8 @@ from sqlalchemy.orm.sync import update
 
 from auth.utils import verify_token
 from database import get_async_session
-from models.models import Rent, Renter
-from renter.scheme import Rent_scheme, My_rent_scheme
+from models.models import Rent, Renter, Category
+from renter.scheme import Rent_scheme, My_rent_scheme, UpdateRentScheme
 
 renter_router = APIRouter()
 
@@ -83,39 +85,59 @@ async def get_rents(token: dict = Depends(verify_token),
 
 # @renter_router.put('/renter/renter/edit')
 # async def edit_rent(rent_id: int,
-#                     model: Update_rent,
+#                     model: UpdateRentScheme,
 #                     token: dict = Depends(verify_token),
 #                     session: AsyncSession = Depends(get_async_session)):
-#     try:
+#     # try:
 #         renter_id = token.get('renter_id')
 #         if renter_id is None:
 #             raise HTTPException(status_code=400, detail="Not authenticated")
 #
 #         query = select(Rent).where(Rent.id == rent_id, Rent.renter_id == renter_id)
 #         res = await session.execute(query)
-#         existing_rent = res.scalars().first()
+#         existing_rent = res.scalars().one()
 #
 #         if not existing_rent:
 #             raise HTTPException(status_code=404, detail="Rent not found")
 #
 #         update_data = model.dict(exclude_unset=True)  # Only include fields that are set
-#
-#         if 'category_id' in update_data:
-#             # Verify if the new category_id exists in the category table
-#             category_id = update_data['category_id']
-#             category_query = select(Category).where(Category.id == category_id)
-#             category_res = await session.execute(category_query)
-#             category = category_res.scalars().first()
-#
-#             if not category:
-#                 raise HTTPException(status_code=400, detail="Invalid category_id")
-#
-#         # Update only the provided fields, retain old values for others
-#         for key, value in update_data.items():
-#             setattr(existing_rent, key, value)
-#
+#         await session.execute(
+#             update(Rent).where(Rent.id == rent_id and Rent.renter_id == renter_id).values(**model.dict()))
 #         await session.commit()
-#         return {"detail": "Updated successfully"}
-#     except Exception as e:
-#         await session.rollback()
-#         raise HTTPException(status_code=400, detail=str(e))
+#
+#     #     await session.commit()
+#     #     return {"detail": "Updated successfully"}
+#     # except Exception as e:
+#     #     await session.rollback()
+#     #     raise HTTPException(status_code=400, detail=str(e))
+
+
+@renter_router.put('/renter/renter/edit')
+async def edit_rent(rent_id: int,
+                    model: UpdateRentScheme,
+                    token: dict = Depends(verify_token),
+                    session: AsyncSession = Depends(get_async_session)):
+    try:
+        renter_id = token.get('renter_id')
+        if renter_id is None:
+            raise HTTPException(status_code=400, detail="Not authenticated")
+
+        query = select(Rent).where(and_(Rent.id == rent_id, Rent.renter_id == renter_id))
+        res = await session.execute(query)
+        existing_rent = res.scalars().one_or_none()
+        if not existing_rent:
+            raise HTTPException(status_code=404, detail="Rent not found")
+
+        elif existing_rent:
+            for fields, values in model.dict().items():
+                if values:
+                    setattr(existing_rent, fields, values)
+            setattr(existing_rent, 'updated_at', datetime.datetime.now())
+            await session.commit()
+            return existing_rent
+        else:
+            raise HTTPException(status_code=400, detail="No fields to update")
+
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
