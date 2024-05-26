@@ -6,7 +6,7 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -135,3 +135,26 @@ async def get_rents_review(
     data = await session.execute(query)
     rate_data = data.scalars().all()
     return rate_data
+<<<<<<< Updated upstream
+=======
+
+
+@mobile_router.get('/student/search', response_model=List[RentGETScheme])
+async def get_all_rents(
+        query: str,
+        token: dict = Depends(verify_token),
+        session: AsyncSession = Depends(get_async_session)
+):
+    gender = token.get('jins_id')
+    search_query = f'%{query}%'
+    print(gender)
+    query_data = select(Rent).options(
+        selectinload(Rent.jins),
+        selectinload(Rent.category),
+        selectinload(Rent.renter)
+    ).where(and_(Rent.student_jins_id == gender, query in Rent.description))
+    data = await session.execute(query_data)
+    print(data.scalars().all())
+    return {'success': True}
+
+>>>>>>> Stashed changes

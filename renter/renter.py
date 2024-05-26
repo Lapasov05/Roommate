@@ -83,35 +83,6 @@ async def get_rents(token: dict = Depends(verify_token),
         raise HTTPException(status_code=400, detail=f"{e}")
 
 
-# @renter_router.put('/renter/renter/edit')
-# async def edit_rent(rent_id: int,
-#                     model: UpdateRentScheme,
-#                     token: dict = Depends(verify_token),
-#                     session: AsyncSession = Depends(get_async_session)):
-#     # try:
-#         renter_id = token.get('renter_id')
-#         if renter_id is None:
-#             raise HTTPException(status_code=400, detail="Not authenticated")
-#
-#         query = select(Rent).where(Rent.id == rent_id, Rent.renter_id == renter_id)
-#         res = await session.execute(query)
-#         existing_rent = res.scalars().one()
-#
-#         if not existing_rent:
-#             raise HTTPException(status_code=404, detail="Rent not found")
-#
-#         update_data = model.dict(exclude_unset=True)  # Only include fields that are set
-#         await session.execute(
-#             update(Rent).where(Rent.id == rent_id and Rent.renter_id == renter_id).values(**model.dict()))
-#         await session.commit()
-#
-#     #     await session.commit()
-#     #     return {"detail": "Updated successfully"}
-#     # except Exception as e:
-#     #     await session.rollback()
-#     #     raise HTTPException(status_code=400, detail=str(e))
-
-
 @renter_router.put('/renter/renter/edit')
 async def edit_rent(rent_id: int,
                     model: UpdateRentScheme,

@@ -50,19 +50,18 @@ def generate_token_renter(renter_id: int):
         'renter_id':renter_id,
         'jti':jti_refresh
     }
-    access_token =jwt.encode(data_access_token,secret_key,algorithm)
-    refresh_token =jwt.encode(data_refresh_token,secret_key,algorithm)
+    access_token = jwt.encode(data_access_token,secret_key,algorithm)
+    refresh_token = jwt.encode(data_refresh_token,secret_key,algorithm)
 
     return {
-    'access_token':access_token,
-     'refresh_token':refresh_token
+     'access_token': access_token,
+     'refresh_token': refresh_token
     }
 
 
-
-def verify_token(credentials:HTTPAuthorizationCredentials = Depends(security)):
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
-        token =credentials.credentials
+        token = credentials.credentials
         secret_key = os.environ.get('SECRET')
 
         payload =jwt.decode(token,secret_key,algorithms=['HS256'])
