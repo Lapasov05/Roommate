@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 
 from database import get_async_session
 from .scheme import User_Phone, UserLogin, UserData_2, University_list, faculty_list, district_list, region_list, \
-    UserData_info, RenterData, RenterData_info
+    UserData_info, RenterData, RenterData_info, change_password
 from models.models import User, Renter, University, Faculty, District, Region
 from .utils import generate_token, verify_token, generate_token_renter
 
@@ -56,7 +56,7 @@ async def reset_password(phone: str,
                 query_update = update(User).where(User.phone == phone).values(password=hash_password)
                 await session.execute(query_update)
                 await session.commit()
-                return HTTPException(status_code=200,detail="Password updated")
+                return HTTPException(status_code=200, detail="Password updated")
             else:
                 raise HTTPException(status_code=400, detail="User does not exist")
         else:
@@ -81,6 +81,7 @@ async def reset_password(phone: str,
                 token = generate_token_renter(result.id)
                 await session.execute(query_update)
                 await session.commit()
+
                 return token
             else:
                 raise HTTPException(status_code=400, detail="User does not exist")
@@ -192,7 +193,7 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
         user_result = res_user.scalar_one_or_none()
 
         if user_result and pwd_context.verify(user.password, user_result.password):
-            token = generate_token(user_result.id)
+            token = generate_token(user_result.id, user_result.jins_id)
             print('User')
             return {"status_code": 200, "detail": token}
         else:
@@ -274,29 +275,81 @@ async def get_ditrict(region_id: int,
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.get("/student/user_info",response_model=UserData_info)
-async def get_user_info(token:dict=Depends(verify_token),
-                        session:AsyncSession=Depends(get_async_session)):
+@auth_router.get("/student/user_info", response_model=UserData_info)
+async def get_user_info(token: dict = Depends(verify_token),
+                        session: AsyncSession = Depends(get_async_session)):
     try:
         user_id = token.get('user_id')
-        query = select(User).where(User.id==user_id)
+        query = select(User).where(User.id == user_id)
         res = await session.execute(query)
         result = res.scalar()
         return result
     except Exception as e:
-        return HTTPException(status_code=400,detail=f"{e}")
+        return HTTPException(status_code=400, detail=f"{e}")
 
 
-
-@auth_router.get("/renter/user_info",response_model=RenterData_info)
-async def get_user_info(token:dict=Depends(verify_token),
-                        session:AsyncSession=Depends(get_async_session)):
+@auth_router.get("/renter/user_info", response_model=RenterData_info)
+async def get_user_info(token: dict = Depends(verify_token),
+                        session: AsyncSession = Depends(get_async_session)):
     try:
         user_id = token.get('renter_id')
-        query = select(Renter).where(Renter.id==user_id)
+        query = select(Renter).where(Renter.id == user_id)
         res = await session.execute(query)
         result = res.scalar()
         return result
     except Exception as e:
+        return HTTPException(status_code=400, detail=f"{e}")
+
+
+@auth_router.put('/student/profile/update')
+async def change_password_user(model:change_password,
+                          token: dict = Depends(verify_token),
+                          session: AsyncSession = Depends(get_async_session)
+     ):
+    try:
+        if model.new_password==model.confirm_password:
+            user_id = token.get('user_id')
+            password_hash = pwd_context.hash(model.old_password)
+            query = select(User).where(User.id==user_id)
+            res = await session.execute(query)
+            result = res.scalar()
+            if result and pwd_context.verify(model.old_password, result.password):
+                new_password_hash= pwd_context.hash(model.confirm_password)
+                query_update = update(User).where(User.id==user_id).values(password=new_password_hash)
+                await session.execute(query_update)
+                await session.commit()
+                return HTTPException(status_code=200,detail="Password changed")
+            else:
+                return HTTPException(status_code=400,detail="Old password is not correct")
+        else:
+            return HTTPException(status_code=400,detail="New passwords are not same")
+    except Exception as e:
         return HTTPException(status_code=400,detail=f"{e}")
 
+
+@auth_router.put('/renter/profile/update')
+async def change_password_renter(model:change_password,
+                          token: dict = Depends(verify_token),
+                          session: AsyncSession = Depends(get_async_session)
+     ):
+    try:
+        if model.new_password == model.confirm_password:
+            user_id = token.get('renter_id')
+
+            # Fetch the renter by user_id
+            query = select(Renter).where(Renter.id == user_id)
+            res = await session.execute(query)
+            renter = res.scalar()
+
+            if renter and pwd_context.verify(model.old_password, renter.password):
+                new_password_hash = pwd_context.hash(model.confirm_password)
+                query_update = update(Renter).where(Renter.id == user_id).values(password=new_password_hash)
+                await session.execute(query_update)
+                await session.commit()
+                return {"detail": "Password changed successfully"}
+            else:
+                raise HTTPException(status_code=400, detail="Old password is not correct")
+        else:
+            raise HTTPException(status_code=400, detail="New passwords do not match")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
