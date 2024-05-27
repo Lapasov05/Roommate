@@ -96,6 +96,7 @@ class User(Base):
     wishlist = relationship('Wishlist', back_populates='user')
     rate = relationship('Rate', back_populates='user')
     jins = relationship('Jins', back_populates='user')
+    announcement = relationship('Announcement', back_populates='user')
 
 
 class Renter(Base):
@@ -190,4 +191,28 @@ class Image(Base):
     hashcode = Column(String, unique=True)
 
     rent = relationship('Rent', back_populates='image')
+
+
+class AnnouncementType(Base):
+    __tablename__ = 'announcement_type'
+    metadata = metadata
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    type_uz = Column(String)
+    type_ru = Column(String)
+
+    announcement = relationship('Announcement', back_populates='type')
+
+
+class Announcement(Base):
+    __tablename__ = 'announcement'
+    metadata = metadata
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String)
+    description = Column(Text)
+    type_id = Column(Integer, ForeignKey('announcement_type.id'))
+    user_id = Column(Integer, ForeignKey('user.id'))
+
+    type = relationship('AnnouncementType', back_populates='announcement')
+    user = relationship('User', back_populates='announcement')
+
 

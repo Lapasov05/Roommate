@@ -5,34 +5,62 @@ from typing import List
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from fastapi_pagination import Page, add_pagination, paginate
+# from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlalchemy import select, insert, or_, and_
+from sqlalchemy import select, insert, or_, and_, delete
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from auth.utils import verify_token
 from database import get_async_session
-from mobile.scheme import RentGETScheme, RentADDScheme, FilterScheme, ReviewPostScheme, RateGetScheme
-from models.models import Rent, Image, Rate
+from mobile.scheme import RentGETScheme, RentADDScheme, FilterScheme, ReviewPostScheme, RateGetScheme, WishlistGETScheme
+from models.models import Rent, Image, Rate, Wishlist
 
 from datetime import datetime, timedelta
 
 mobile_router = APIRouter()
 
 
-@mobile_router.get('/student/rent', response_model=List[RentGETScheme])
+@mobile_router.get('/student/rent')
 async def get_all_rent(
+        page: int = 1,
+        size: int = 10,
+        token: dict = Depends(verify_token),
+        session: AsyncSession = Depends(get_async_session)
+) -> Page[RentGETScheme]:
+    try:
+        gender_id = token['jins_id']
+        query = select(Rent).options(
+            selectinload(Rent.jins), selectinload(Rent.category), selectinload(Rent.renter)
+        ).where(Rent.student_jins_id == gender_id)
+        rent = await session.execute(query)
+        rent_data = rent.scalars().all()
+        return paginate(rent_data)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+add_pagination(mobile_router)
+
+
+@mobile_router.get('/student/rent_by_id', response_model=RentGETScheme)
+async def get_all_rent_by_id(
+        rent_id: int,
         token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
     try:
-        query = select(Rent).options(selectinload(Rent.jins), selectinload(Rent.category))
-        rent = await session.execute(query)
-        print(rent)
-        rent_data = rent.scalars().all()
-        return rent_data
+        gender_id = token['jins_id']
+        if gender_id is None:
+            raise HTTPException(status_code=404, detail='Not authenticated')
+        data = await session.execute(select(Rent).options(
+            selectinload(Rent.renter), selectinload(Rent.jins), selectinload(Rent.category)).where(
+            and_(Rent.id == rent_id, Rent.student_jins_id == token['jins_id'])
+        ))
+        return data.scalars().one_or_none()
     except Exception as e:
-        return HTTPException(status_code=400, detail=f"{e}")
+        raise HTTPException(status_code=401, detail='Not authenticated')
 
 
 @mobile_router.post('/student/add-rent')
@@ -42,7 +70,8 @@ async def add_rent(
         session: AsyncSession = Depends(get_async_session)
 ):
     try:
-        await session.execute(insert(Rent).values(**data.dict()))
+        renter_id = token['renter_id']
+        await session.execute(insert(Rent).values(**data.dict(), renter_id=renter_id))
         await session.commit()
     except Exception as e:
         raise HTTPException(status_code=400, detail='Error inserting request')
@@ -135,26 +164,64 @@ async def get_rents_review(
     data = await session.execute(query)
     rate_data = data.scalars().all()
     return rate_data
-<<<<<<< Updated upstream
-=======
 
 
-@mobile_router.get('/student/search', response_model=List[RentGETScheme])
+@mobile_router.post('/student/add-wishlist')
+async def add_wishlist(
+    rent_id: int,
+    token: dict = Depends(verify_token),
+    session: AsyncSession = Depends(get_async_session)
+):
+    user_id = token['user_id']
+    wishlist_data = await session.execute(
+        select(Wishlist).options(selectinload(Wishlist.rent), selectinload(Wishlist.user)).where(
+            and_(Wishlist.rent_id == rent_id, Wishlist.user_id == user_id)
+        ))
+    wish_data = wishlist_data.scalars().one_or_none()
+    if wish_data:
+        await session.execute(delete(Wishlist).where(and_(Wishlist.rent_id==rent_id, Wishlist.user_id==user_id)))
+    else:
+        await session.execute(insert(Wishlist).values(user_id=user_id, rent_id=rent_id))
+    await session.commit()
+    return {'success': True}
+
+
+@mobile_router.get('/student/get-wishlist', response_model=List[WishlistGETScheme])
+async def get_wishlist(
+        token: dict = Depends(verify_token),
+        session: AsyncSession = Depends(get_async_session)
+):
+    try:
+        query = select(Wishlist).options(selectinload(Wishlist.rent)).where(Wishlist.user_id == token['user_id'])
+        data = await session.execute(query)
+        return data
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail='Wishlist is not available!')
+
+
+@mobile_router.get('/student/search-rents')
 async def get_all_rents(
         query: str,
         token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
-):
+) -> Page[RentGETScheme]:
     gender = token.get('jins_id')
     search_query = f'%{query}%'
-    print(gender)
     query_data = select(Rent).options(
         selectinload(Rent.jins),
         selectinload(Rent.category),
         selectinload(Rent.renter)
-    ).where(and_(Rent.student_jins_id == gender, query in Rent.description))
+    ).where(and_(Rent.student_jins_id == gender, or_(Rent.name.ilike(search_query), Rent.description.ilike(search_query))))
     data = await session.execute(query_data)
-    print(data.scalars().all())
-    return {'success': True}
+    return paginate(data.scalars().all())
 
->>>>>>> Stashed changes
+add_pagination(mobile_router)
+
+
+
+
+
+
+
+
+

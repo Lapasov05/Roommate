@@ -7,18 +7,25 @@ from auth.scheme import UserData_info
 
 class CategoryScheme(BaseModel):
     id: int
-    name: str
-    name_uz:str
-    name_ru:str
+    name_uz: str
+    name_ru: str
 
 
 class JinsScheme(BaseModel):
     id: int
-    name: str
+    name_uz: str
+    name_ru: str
 
 
+class RenterInfoScheme(BaseModel):
+    id: int
+    firstname: str
+    lastname: str
+    phone: str
+    image: str
 
-class   RentGETScheme(BaseModel):
+
+class RentGETScheme(BaseModel):
     id: int
     name: str
     description: str
@@ -27,7 +34,7 @@ class   RentGETScheme(BaseModel):
     total_price: float
     jins: JinsScheme
     student_count: int
-    renter_id: int
+    renter: RenterInfoScheme
     location: str
     latitude: float
     longitude: float
@@ -89,7 +96,28 @@ class RateGetScheme(BaseModel):
     user: UserInfo
 
 
+class RentScheme(BaseModel):
+    id: int
+    name: str
+    description: str
+    category: CategoryScheme
+    room_count: int
+    total_price: float
+    student_count: int
+    location: str
+    latitude: float
+    longitude: float
+    wifi: bool
+    conditioner: bool
+    washing_machine: bool
+    TV: bool
+    refrigerator: bool
+    furniture: bool
+    other_convenience: str
 
 
+class WishlistGETScheme(BaseModel):
+    id: int
+    rent: RentScheme
 
 
