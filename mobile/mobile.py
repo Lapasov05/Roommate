@@ -135,8 +135,6 @@ async def get_rents_review(
     data = await session.execute(query)
     rate_data = data.scalars().all()
     return rate_data
-<<<<<<< Updated upstream
-=======
 
 
 @mobile_router.get('/student/search', response_model=List[RentGETScheme])
@@ -157,4 +155,11 @@ async def get_all_rents(
     print(data.scalars().all())
     return {'success': True}
 
->>>>>>> Stashed changes
+
+
+
+# @mobile_router.post('/student/rent-add/')
+# async def add_rent_student(token:dict=Depends(verify_token),
+#                            session:AsyncSession=Depends(get_async_session)):
+
+
