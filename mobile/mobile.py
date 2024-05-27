@@ -223,5 +223,3 @@ add_pagination(mobile_router)
 
 
 
-
-
