@@ -37,6 +37,8 @@ async def get_rents(token: dict = Depends(verify_token),
                     session: AsyncSession = Depends(get_async_session)):
     try:
         renter_id = token.get('renter_id')
+        if renter_id is None:
+            raise HTTPException(status_code=404, detail="Not authenticated")
         query = select(Rent).where(Rent.renter_id == renter_id)
         res = await session.execute(query)
         result = res.scalars().all()

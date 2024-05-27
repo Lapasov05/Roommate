@@ -17,23 +17,24 @@ def generate_token(user_id: int,jins_id:int):
     jti_refresh = str(secrets.token_urlsafe(32))
     data_access_token = {
         'token_type': 'access',
+        'exp': datetime.utcnow() + timedelta(minutes=30),
         'user_id': user_id,
-        'jins_id':jins_id,
+        'jins_id': jins_id,
         'jti':jti_access
     }
     data_refresh_token = {
-        'token_type':'refresh',
-        'user_id':user_id,
-        'jins_id':jins_id,
-        'jti':jti_refresh
+        'token_type': 'refresh',
+        'exp': datetime.utcnow() + timedelta(minutes=30),
+        'user_id': user_id,
+        'jins_id': jins_id,
+        'jti': jti_refresh
     }
-    access_token =jwt.encode(data_access_token,secret_key,algorithm)
-    refresh_token =jwt.encode(data_refresh_token,secret_key,algorithm)
+    access_token = jwt.encode(data_access_token, secret_key, algorithm)
+    refresh_token = jwt.encode(data_refresh_token, secret_key, algorithm)
 
     return {
-    'access_token':access_token,
-
-     'refresh_token':refresh_token
+     'access_token': access_token,
+     'refresh_token': refresh_token
     }
 
 
@@ -42,11 +43,13 @@ def generate_token_renter(renter_id: int):
     jti_refresh = str(secrets.token_urlsafe(32))
     data_access_token = {
         'token_type': 'access',
+        'exp': datetime.utcnow() + timedelta(minutes=30),
         'renter_id': renter_id,
         'jti':jti_access
     }
     data_refresh_token = {
         'token_type':'refresh',
+        'exp': datetime.utcnow() + timedelta(minutes=30),
         'renter_id':renter_id,
         'jti':jti_refresh
     }
