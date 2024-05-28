@@ -8,7 +8,7 @@ from typing import List
 
 from sqlalchemy.orm.sync import update
 
-from auth.utils import verify_token
+from auth.utils import verify_token, verify_renter_token
 from database import get_async_session
 from models.models import Rent, Renter, Category
 from renter.scheme import Rent_scheme, My_rent_scheme, UpdateRentScheme
@@ -18,7 +18,7 @@ renter_router = APIRouter()
 
 @renter_router.post('/renter/add_rent')
 async def add_rent(model: Rent_scheme,
-                   token: dict = Depends(verify_token),
+                   token: dict = Depends(verify_renter_token),
                    session: AsyncSession = Depends(get_async_session)
                    ):
     try:
@@ -33,7 +33,7 @@ async def add_rent(model: Rent_scheme,
 
 
 @renter_router.get('/renter/get_rents', response_model=List[My_rent_scheme])
-async def get_rents(token: dict = Depends(verify_token),
+async def get_rents(token: dict = Depends(verify_renter_token),
                     session: AsyncSession = Depends(get_async_session)):
     try:
         renter_id = token.get('renter_id')

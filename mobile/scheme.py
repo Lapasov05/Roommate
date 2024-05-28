@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from pydantic import BaseModel, Field
 
@@ -25,6 +25,12 @@ class RenterInfoScheme(BaseModel):
     image: str
 
 
+class RentImageScheme(BaseModel):
+    id: int
+    url: str
+    hashcode: str
+
+
 class RentGETScheme(BaseModel):
     id: int
     name: str
@@ -33,6 +39,7 @@ class RentGETScheme(BaseModel):
     room_count: int
     total_price: float
     jins: JinsScheme
+    image: List[RentImageScheme]
     student_count: int
     renter: RenterInfoScheme
     location: str
@@ -121,3 +128,7 @@ class WishlistGETScheme(BaseModel):
     rent: RentScheme
 
 
+class AnnouncementPOSTScheme(BaseModel):
+    title: str
+    description: str
+    type_id: int

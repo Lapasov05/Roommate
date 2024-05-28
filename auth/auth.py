@@ -13,7 +13,7 @@ from database import get_async_session
 from .scheme import User_Phone, UserLogin, UserData_2, University_list, faculty_list, district_list, region_list, \
     UserData_info, RenterData, RenterData_info, change_password
 from models.models import User, Renter, University, Faculty, District, Region
-from .utils import generate_token, verify_token, generate_token_renter
+from .utils import generate_token, verify_token, generate_token_renter, verify_renter_token
 
 auth_router = APIRouter()
 
@@ -289,7 +289,7 @@ async def get_user_info(token: dict = Depends(verify_token),
 
 
 @auth_router.get("/renter/user_info", response_model=RenterData_info)
-async def get_user_info(token: dict = Depends(verify_token),
+async def get_user_info(token: dict = Depends(verify_renter_token),
                         session: AsyncSession = Depends(get_async_session)):
     try:
         user_id = token.get('renter_id')

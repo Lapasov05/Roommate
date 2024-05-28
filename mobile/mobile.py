@@ -15,7 +15,8 @@ from sqlalchemy.orm import selectinload
 
 from auth.utils import verify_token
 from database import get_async_session
-from mobile.scheme import RentGETScheme, RentADDScheme, FilterScheme, ReviewPostScheme, RateGetScheme, WishlistGETScheme
+from mobile.scheme import RentGETScheme, RentADDScheme, FilterScheme, ReviewPostScheme, RateGetScheme, \
+    WishlistGETScheme, AnnouncementPOSTScheme
 from models.models import Rent, Image, Rate, Wishlist
 
 from datetime import datetime, timedelta
@@ -23,7 +24,7 @@ from datetime import datetime, timedelta
 mobile_router = APIRouter()
 
 
-@mobile_router.get('/student/rent')
+@mobile_router.get('/rent')
 async def get_all_rent(
         page: int = 1,
         size: int = 10,
@@ -33,7 +34,10 @@ async def get_all_rent(
     try:
         gender_id = token['jins_id']
         query = select(Rent).options(
-            selectinload(Rent.jins), selectinload(Rent.category), selectinload(Rent.renter)
+            selectinload(Rent.jins),
+            selectinload(Rent.category),
+            selectinload(Rent.renter),
+            selectinload(Rent.image)
         ).where(Rent.student_jins_id == gender_id)
         rent = await session.execute(query)
         rent_data = rent.scalars().all()
@@ -44,7 +48,7 @@ async def get_all_rent(
 add_pagination(mobile_router)
 
 
-@mobile_router.get('/student/rent_by_id', response_model=RentGETScheme)
+@mobile_router.get('/rent_by_id', response_model=RentGETScheme)
 async def get_all_rent_by_id(
         rent_id: int,
         token: dict = Depends(verify_token),
@@ -63,7 +67,7 @@ async def get_all_rent_by_id(
         raise HTTPException(status_code=401, detail='Not authenticated')
 
 
-@mobile_router.post('/student/add-rent')
+@mobile_router.post('/add-rent')
 async def add_rent(
         data: RentADDScheme,
         token: dict = Depends(verify_token),
@@ -79,13 +83,12 @@ async def add_rent(
     return {'success': True}
 
 
-@mobile_router.get('/student/home/filters-news')
+@mobile_router.get('/home/filters-news')
 async def rent_filter(
         token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
 ):
     jins_id = token.get('jins_id')
-    # Calculate the date 3 days ago
     three_days_ago = datetime.now() - timedelta(days=3)
 
     rents = select(Rent).options(
@@ -104,7 +107,7 @@ async def rent_filter(
     return rented_items
 
 
-@mobile_router.post('/student/add-image-rent')
+@mobile_router.post('/add-image-rent')
 async def add_image_rent(
         image: UploadFile,
         rent_id: int,
@@ -122,7 +125,7 @@ async def add_image_rent(
     return {'success': True}
 
 
-@mobile_router.get('/student/image', response_class=FileResponse)
+@mobile_router.get('/image', response_class=FileResponse)
 async def get_image(
         hashcode: str,
         token: dict = Depends(verify_token),
@@ -137,7 +140,7 @@ async def get_image(
         raise HTTPException(status_code=400, detail='Image is not available!')
 
 
-@mobile_router.post('/student/add-review')
+@mobile_router.post('/add-review')
 async def add_review(
         review_data: ReviewPostScheme,
         token: dict = Depends(verify_token),
@@ -154,7 +157,7 @@ async def add_review(
         raise HTTPException(status_code=400, detail="Bad request!!!")
 
 
-@mobile_router.get('/student/get_rents/get-review', response_model=List[RateGetScheme])
+@mobile_router.get('/get_rents/get-review', response_model=List[RateGetScheme])
 async def get_rents_review(
         rent_id: int,
         token: dict = Depends(verify_token),
@@ -166,7 +169,7 @@ async def get_rents_review(
     return rate_data
 
 
-@mobile_router.post('/student/add-wishlist')
+@mobile_router.post('/add-wishlist')
 async def add_wishlist(
     rent_id: int,
     token: dict = Depends(verify_token),
@@ -186,7 +189,7 @@ async def add_wishlist(
     return {'success': True}
 
 
-@mobile_router.get('/student/get-wishlist', response_model=List[WishlistGETScheme])
+@mobile_router.get('/get-wishlist', response_model=List[WishlistGETScheme])
 async def get_wishlist(
         token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
@@ -199,7 +202,7 @@ async def get_wishlist(
         raise HTTPException(status_code=404, detail='Wishlist is not available!')
 
 
-@mobile_router.get('/student/search-rents')
+@mobile_router.get('/search-rents')
 async def get_all_rents(
         query: str,
         token: dict = Depends(verify_token),
@@ -218,6 +221,13 @@ async def get_all_rents(
 add_pagination(mobile_router)
 
 
+@mobile_router.get('/add-announcement')
+async def add_announcement(
+        data: AnnouncementPOSTScheme,
+        token: dict = Depends(verify_token),
+        session: AsyncSession = Depends(get_async_session)
+):
+    user_id = token['user_id']
 
 
 

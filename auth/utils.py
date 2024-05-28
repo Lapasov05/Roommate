@@ -67,12 +67,36 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         token = credentials.credentials
         secret_key = os.environ.get('SECRET')
 
-        payload =jwt.decode(token,secret_key,algorithms=['HS256'])
-        return payload
+        payload =jwt.decode(token, secret_key,algorithms=['HS256'])
+        try:
+            user_id = payload['user_id']
+            if user_id:
+                return payload
+            else:
+                raise HTTPException(status_code=401, detail='Not allowed')
+        except KeyError:
+            raise HTTPException(status_code=401, detail='Not allowed')
     except jwt.ExpiredSignatureError:
-        return HTTPException(status_code=401,detail="Token has expired")
+        return HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:
-        return HTTPException(status_code=401,detail="Invalid token")
+        return HTTPException(status_code=401, detail="Invalid token")
 
 
+def verify_renter_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        secret_key = os.environ.get('SECRET')
+
+        payload =jwt.decode(token, secret_key,algorithms=['HS256'])
+        try:
+            if payload['renter_id']:
+                return payload
+            else:
+                raise HTTPException(status_code=401, detail='Not allowed')
+        except KeyError:
+            raise HTTPException(status_code=401, detail='Not allowed')
+    except jwt.ExpiredSignatureError:
+        return HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        return HTTPException(status_code=401, detail="Invalid token")
 
