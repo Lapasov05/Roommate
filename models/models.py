@@ -216,3 +216,26 @@ class Announcement(Base):
     user = relationship('User', back_populates='announcement')
 
 
+class Role(Base):
+    __tablename__ = 'role'
+    metadata=metadata
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(25))
+
+    stuff = relationship('Stuff',back_populates='role')
+
+class Stuff(Base):
+    __tablename__ = 'stuff'
+    metadata=metadata
+    id = Column(Integer,primary_key=True,autoincrement=True)
+    firstname = Column(String)
+    lastname = Column(String)
+    phone = Column(String, unique=True)
+    password = Column(String)
+    role_id = Column(Integer,ForeignKey('role.id'))
+    email = Column(Text,unique=True)
+    registred_at = Column(TIMESTAMP, default=datetime.datetime.utcnow())
+    last_login = Column(TIMESTAMP, default=datetime.datetime.utcnow())
+    role = relationship('Role',back_populates='stuff')
+
+
