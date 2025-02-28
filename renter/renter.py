@@ -16,7 +16,7 @@ from renter.scheme import Rent_scheme, My_rent_scheme, UpdateRentScheme
 renter_router = APIRouter()
 
 
-@renter_router.post('/renter/add_rent')
+@renter_router.post('/renter/add_rent', tags=['Renter'])
 async def add_rent(model: Rent_scheme,
                    token: dict = Depends(verify_renter_token),
                    session: AsyncSession = Depends(get_async_session)
@@ -32,7 +32,7 @@ async def add_rent(model: Rent_scheme,
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@renter_router.get('/renter/get_rents', response_model=List[My_rent_scheme])
+@renter_router.get('/renter/get_rents', response_model=List[My_rent_scheme], tags=['Renter'])
 async def get_rents(token: dict = Depends(verify_renter_token),
                     session: AsyncSession = Depends(get_async_session)):
     try:
@@ -85,7 +85,7 @@ async def get_rents(token: dict = Depends(verify_renter_token),
         raise HTTPException(status_code=400, detail=f"{e}")
 
 
-@renter_router.put('/renter/renter/edit')
+@renter_router.put('/renter/renter/edit', tags=['Renter'])
 async def edit_rent(rent_id: int,
                     model: UpdateRentScheme,
                     token: dict = Depends(verify_token),

@@ -16,39 +16,39 @@ from sqlalchemy.orm import selectinload
 from auth.utils import verify_token
 from database import get_async_session
 from mobile.scheme import RentGETScheme, RentADDScheme, FilterScheme, ReviewPostScheme, RateGetScheme, \
-    WishlistGETScheme, AnnouncementPOSTScheme
-from models.models import Rent, Image, Rate, Wishlist
+    WishlistGETScheme, AnnouncementPOSTScheme, FacultyCreate, UniversityCreate
+from models.models import Rent, Image, Rate, Wishlist, University, Faculty
 
 from datetime import datetime, timedelta
 
 mobile_router = APIRouter()
 
 
-@mobile_router.get('/rent')
-async def get_all_rent(
-        page: int = 1,
-        size: int = 10,
-        token: dict = Depends(verify_token),
-        session: AsyncSession = Depends(get_async_session)
-) -> Page[RentGETScheme]:
-    try:
-        gender_id = token['jins_id']
-        query = select(Rent).options(
-            selectinload(Rent.jins),
-            selectinload(Rent.category),
-            selectinload(Rent.renter),
-            selectinload(Rent.image)
-        ).where(Rent.student_jins_id == gender_id)
-        rent = await session.execute(query)
-        rent_data = rent.scalars().all()
-        return paginate(rent_data)
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+# @mobile_router.get('/rent')
+# async def get_all_rent(
+#         page: int = 1,
+#         size: int = 10,
+#         token: dict = Depends(verify_token),
+#         session: AsyncSession = Depends(get_async_session)
+# ) -> Page[RentGETScheme]:
+#     try:
+#         gender_id = token['jins_id']
+#         query = select(Rent).options(
+#             selectinload(Rent.jins),
+#             selectinload(Rent.category),
+#             selectinload(Rent.renter),
+#             selectinload(Rent.image)
+#         ).where(Rent.student_jins_id == gender_id)
+#         rent = await session.execute(query)
+#         rent_data = rent.scalars().all()
+#         return paginate(rent_data)
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail="Not authenticated")
 
-add_pagination(mobile_router)
+# add_pagination(mobile_router)
 
 
-@mobile_router.get('/rent_by_id', response_model=RentGETScheme)
+@mobile_router.get('/rent_by_id', response_model=RentGETScheme, tags=['Renter'])
 async def get_all_rent_by_id(
         rent_id: int,
         token: dict = Depends(verify_token),
@@ -67,7 +67,7 @@ async def get_all_rent_by_id(
         raise HTTPException(status_code=401, detail='Not authenticated')
 
 
-@mobile_router.post('/add-rent')
+@mobile_router.post('/add-rent', tags=['Renter'])
 async def add_rent(
         data: RentADDScheme,
         token: dict = Depends(verify_token),
@@ -83,7 +83,7 @@ async def add_rent(
     return {'success': True}
 
 
-@mobile_router.get('/home/filters-news')
+@mobile_router.get('/home/filters-news', tags=['Home'])
 async def rent_filter(
         token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
@@ -107,7 +107,7 @@ async def rent_filter(
     return rented_items
 
 
-@mobile_router.post('/add-image-rent')
+@mobile_router.post('/add-image-rent', tags=['Renter'])
 async def add_image_rent(
         image: UploadFile,
         rent_id: int,
@@ -125,7 +125,7 @@ async def add_image_rent(
     return {'success': True}
 
 
-@mobile_router.get('/image', response_class=FileResponse)
+@mobile_router.get('/image', response_class=FileResponse, tags=['Home'])
 async def get_image(
         hashcode: str,
         token: dict = Depends(verify_token),
@@ -140,7 +140,7 @@ async def get_image(
         raise HTTPException(status_code=400, detail='Image is not available!')
 
 
-@mobile_router.post('/add-review')
+@mobile_router.post('/add-review', tags=['Home'])
 async def add_review(
         review_data: ReviewPostScheme,
         token: dict = Depends(verify_token),
@@ -157,7 +157,7 @@ async def add_review(
         raise HTTPException(status_code=400, detail="Bad request!!!")
 
 
-@mobile_router.get('/get_rents/get-review', response_model=List[RateGetScheme])
+@mobile_router.get('/get_rents/get-review', response_model=List[RateGetScheme], tags=['Renter'])
 async def get_rents_review(
         rent_id: int,
         token: dict = Depends(verify_token),
@@ -169,7 +169,7 @@ async def get_rents_review(
     return rate_data
 
 
-@mobile_router.post('/add-wishlist')
+@mobile_router.post('/add-wishlist', tags=['Wishlist'])
 async def add_wishlist(
     rent_id: int,
     token: dict = Depends(verify_token),
@@ -189,7 +189,7 @@ async def add_wishlist(
     return {'success': True}
 
 
-@mobile_router.get('/get-wishlist', response_model=List[WishlistGETScheme])
+@mobile_router.get('/get-wishlist', response_model=List[WishlistGETScheme], tags=['Wishlist'])
 async def get_wishlist(
         token: dict = Depends(verify_token),
         session: AsyncSession = Depends(get_async_session)
@@ -202,7 +202,7 @@ async def get_wishlist(
         raise HTTPException(status_code=404, detail='Wishlist is not available!')
 
 
-@mobile_router.get('/search-rents')
+@mobile_router.get('/search-rents', tags=['Renter'])
 async def get_all_rents(
         query: str,
         token: dict = Depends(verify_token),
@@ -218,10 +218,10 @@ async def get_all_rents(
     data = await session.execute(query_data)
     return paginate(data.scalars().all())
 
-add_pagination(mobile_router)
+# add_pagination(mobile_router)
 
 
-@mobile_router.get('/add-announcement')
+@mobile_router.get('/add-announcement', tags=['Home'])
 async def add_announcement(
         data: AnnouncementPOSTScheme,
         token: dict = Depends(verify_token),
@@ -232,4 +232,29 @@ async def add_announcement(
 
 
 
+#===============================================================
+
+
+@mobile_router.post("/universities",tags=['Sarvinoz'])
+async def create_university(
+    university: UniversityCreate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    db_university = University(**university.dict())
+    session.add(db_university)
+    await session.commit()
+    await session.refresh(db_university)
+    return db_university
+
+
+@mobile_router.post("/faculties",tags=['Sarvinoz'])
+async def create_faculty(
+    faculty: FacultyCreate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    db_faculty = Faculty(**faculty.dict())
+    session.add(db_faculty)
+    await session.commit()
+    await session.refresh(db_faculty)
+    return db_faculty
 

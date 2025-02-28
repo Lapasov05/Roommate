@@ -3,6 +3,7 @@ from datetime import date, datetime
 from typing import List
 
 import aiofiles
+from drf_spectacular.utils import extend_schema
 from fastapi import APIRouter, HTTPException, UploadFile, Depends
 from sqlalchemy import select, insert, update
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
@@ -21,8 +22,7 @@ pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 user_data = {}  # Initialize user_data dictionary
 
-
-@auth_router.post('/phone_number/')
+@auth_router.post('/phone_number/', tags=['Auth'])
 async def phone_number(user_phone: User_Phone, session: AsyncSession = Depends(get_async_session)):
     try:
         query_phone = select(User).where(User.phone == user_phone.phone)
@@ -41,7 +41,7 @@ async def phone_number(user_phone: User_Phone, session: AsyncSession = Depends(g
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.put('/student/reset-password/')
+@auth_router.put('/student/reset-password/', tags=['Student Auth'])
 async def reset_password(phone: str,
                          password_1: str,
                          password_2: str,
@@ -65,7 +65,7 @@ async def reset_password(phone: str,
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@auth_router.put('/renter/reset-password/')
+@auth_router.put('/renter/reset-password/', tags=['Renter Auth'])
 async def reset_password(phone: str,
                          password_1: str,
                          password_2: str,
@@ -91,7 +91,7 @@ async def reset_password(phone: str,
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@auth_router.post('/phone_number/sms/')
+@auth_router.post('/phone_number/sms/', tags=['Auth'])
 async def get_sms(message: int):
     if message == 1234:
         return HTTPException(status_code=200, detail="Correct code!")
@@ -99,7 +99,7 @@ async def get_sms(message: int):
         return HTTPException(status_code=400, detail="Wrong code!")
 
 
-@auth_router.post('/student/register/step_1/')
+@auth_router.post('/student/register/step_1/', tags=['Student Auth'])
 async def register_user(image: UploadFile,
                         firstname: str,
                         lastname: str,
@@ -133,7 +133,7 @@ async def register_user(image: UploadFile,
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.put('/student/set-profile/')
+@auth_router.put('/student/set-profile/', tags=['Student Auth'])
 async def set_profile(model: UserData_2,
                       token: dict = Depends(verify_token),
                       session: AsyncSession = Depends(get_async_session)
@@ -151,7 +151,7 @@ async def set_profile(model: UserData_2,
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@auth_router.post('/renter/register/')
+@auth_router.post('/renter/register/', tags=['Renter Auth'])
 async def register_user_student(image: UploadFile,
                                 first_name: str,
                                 last_name: str,
@@ -183,7 +183,7 @@ async def register_user_student(image: UploadFile,
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@auth_router.post('/student/login/')
+@auth_router.post('/student/login/', tags=['Student Auth'])
 async def login(user: UserLogin, session: AsyncSession = Depends(get_async_session)):
     try:
         query_user = select(User).where(User.phone == user.phone)
@@ -204,7 +204,7 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
     #     return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
-@auth_router.post('/renter/login/')
+@auth_router.post('/renter/login/', tags=['Renter Auth'])
 async def login(user: UserLogin, session: AsyncSession = Depends(get_async_session)):
     try:
         query_renter = select(Renter).where(Renter.phone == user.phone)
@@ -227,7 +227,7 @@ async def login(user: UserLogin, session: AsyncSession = Depends(get_async_sessi
     #     return HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
-@auth_router.get('/get_university/', response_model=List[University_list])
+@auth_router.get('/get_university/', response_model=List[University_list], tags=['Home'])
 async def get_university(session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(University)
@@ -238,7 +238,7 @@ async def get_university(session: AsyncSession = Depends(get_async_session)):
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.get('/get_faculty/', response_model=List[faculty_list])
+@auth_router.get('/get_faculty/', response_model=List[faculty_list], tags=['Home'])
 async def get_faculty(university_id: int,
                       session: AsyncSession = Depends(get_async_session)
                       ):
@@ -251,7 +251,7 @@ async def get_faculty(university_id: int,
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.get('/get_region/', response_model=List[region_list])
+@auth_router.get('/get_region/', response_model=List[region_list], tags=['Home'])
 async def get_regions(session: AsyncSession = Depends(get_async_session)):
     try:
         query = select(Region)
@@ -262,7 +262,7 @@ async def get_regions(session: AsyncSession = Depends(get_async_session)):
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.get('/get_district/', response_model=List[district_list])
+@auth_router.get('/get_district/', response_model=List[district_list], tags=['Home'])
 async def get_ditrict(region_id: int,
                       session: AsyncSession = Depends(get_async_session)
                       ):
@@ -275,7 +275,7 @@ async def get_ditrict(region_id: int,
         return HTTPException(status_code=500, detail=f"{e}")
 
 
-@auth_router.get("/student/user_info", response_model=UserData_info)
+@auth_router.get("/student/user_info", response_model=UserData_info, tags=['Student Auth'])
 async def get_user_info(token: dict = Depends(verify_token),
                         session: AsyncSession = Depends(get_async_session)):
     try:
@@ -288,7 +288,7 @@ async def get_user_info(token: dict = Depends(verify_token),
         return HTTPException(status_code=400, detail=f"{e}")
 
 
-@auth_router.get("/renter/user_info", response_model=RenterData_info)
+@auth_router.get("/renter/user_info", response_model=RenterData_info, tags=['Renter Auth'])
 async def get_user_info(token: dict = Depends(verify_renter_token),
                         session: AsyncSession = Depends(get_async_session)):
     try:
@@ -298,10 +298,10 @@ async def get_user_info(token: dict = Depends(verify_renter_token),
         result = res.scalar()
         return result
     except Exception as e:
-        return HTTPException(status_code=400, detail=f"{e}")
+        return HTTPException(status_code=400, detail=f"{e}", tags=['Auth'])
 
 
-@auth_router.put('/student/profile/update')
+@auth_router.put('/student/profile/update', tags=['Student Auth'])
 async def change_password_user(model:change_password,
                           token: dict = Depends(verify_token),
                           session: AsyncSession = Depends(get_async_session)
@@ -327,7 +327,7 @@ async def change_password_user(model:change_password,
         return HTTPException(status_code=400,detail=f"{e}")
 
 
-@auth_router.put('/renter/profile/update')
+@auth_router.put('/renter/profile/update', tags=['Renter Auth'])
 async def change_password_renter(model:change_password,
                           token: dict = Depends(verify_token),
                           session: AsyncSession = Depends(get_async_session)

@@ -132,3 +132,22 @@ class AnnouncementPOSTScheme(BaseModel):
     title: str
     description: str
     type_id: int
+
+
+
+#========================================================
+
+class UniversityCreate(BaseModel):
+    name_uz: str
+    name_ru: str
+    acronym_uz: str
+    acronym_ru: str
+    longitude: float
+    latitude: float
+
+class FacultyCreate(BaseModel):
+    name_uz: str
+    name_ru: str
+    university_id: int
+    longitude: float
+    latitude: float
